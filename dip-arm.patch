@@ -1,0 +1,95 @@
+--- dip-3.3.7o/command.c.orig	Thu Jan 21 15:37:13 1999
++++ dip-3.3.7o/command.c	Thu Jan 21 15:45:04 1999
+@@ -2585,6 +2585,92 @@
+   return((~sum) & 0xffff);
+ }
+ 
++#elif defined (__arm__)
++
++/*
++ *	This is a version of ip_compute_csum() optimized for IP headers,
++ *	which always checksum on 4 octet boundaries.
++ *
++ *	Converted and optimised for ARM by R. M. King.
++ *
++ *	Note: the order that the LDM registers are loaded with respect to
++ *	the adc's doesn't matter.
++ */
++static inline unsigned short
++ip_fast_csum(unsigned char * iph, unsigned int ihl)
++{
++	unsigned int sum, tmp1;
++
++    __asm__ __volatile__("
++	sub	%2, %2, #5
++	ldr	%0, [%1], #4
++	ldr	%3, [%1], #4
++	adds	%0, %0, %3
++	ldr	%3, [%1], #4
++	adcs	%0, %0, %3
++	ldr	%3, [%1], #4
++	adcs	%0, %0, %3
++1:	ldr	%3, [%1], #4
++	adcs	%0, %0, %3
++	tst	%2, #15
++	subne	%2, %2, #1
++	bne	1b
++	adc	%0, %0, #0
++	adds	%0, %0, %0, lsl #16
++	addcs	%0, %0, #0x10000
++	mvn	%0, %0
++	mov	%0, %0, lsr #16
++	"
++	: "=&r" (sum), "=&r" (iph), "=&r" (ihl), "=&r" (tmp1)
++	: "1" (iph), "2" (ihl));
++	return(sum);
++}
++
++/*
++ * 	Fold a partial checksum without adding pseudo headers
++ */
++static inline unsigned int
++csum_fold(unsigned int sum)
++{
++	__asm__("
++	adds	%0, %0, %0, lsl #16
++	addcs	%0, %0, #0x10000"
++	: "=r" (sum)
++	: "0" (sum));
++	return (~sum) >> 16;
++}
++
++static inline unsigned long
++csum_tcpudp_nofold(unsigned long saddr, unsigned long daddr, unsigned short len,
++		   unsigned short proto, unsigned int sum)
++{
++	__asm__("
++	adds	%0, %0, %1
++	adcs	%0, %0, %2
++	adcs	%0, %0, %3
++	adc	%0, %0, #0"
++	: "=&r"(sum)
++	: "r" (daddr), "r" (saddr), "r" ((ntohs(len)<<16)+proto*256), "0" (sum));
++	return sum;
++}	
++/*
++ * computes the checksum of the TCP/UDP pseudo-header
++ * returns a 16-bit checksum, already complemented
++ */
++static inline unsigned short int
++csum_tcpudp_magic(unsigned long saddr, unsigned long daddr, unsigned short len,
++		  unsigned short proto, unsigned int sum)
++{
++	return csum_fold(csum_tcpudp_nofold(saddr, daddr, len, proto, sum));
++}
++
++static unsigned short
++udp_check(struct udphdr *uh, int len,
++	unsigned long saddr, unsigned long daddr)
++{
++	return(csum_tcpudp_magic(saddr, daddr, len, IPPROTO_UDP, 0));
++}
++
+ #else
+ 
+ #error You need to write tcp/ip checksum routines for your architecture

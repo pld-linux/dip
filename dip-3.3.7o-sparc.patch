@@ -1,0 +1,198 @@
+(Message inbox:1936)
+From davem@caip.rutgers.edu  Tue Sep  3 03:56:22 1996
+Return-Path: davem@caip.rutgers.edu
+Received: from caipfs.rutgers.edu (caipfs.rutgers.edu [128.6.155.100]) by redhat.com (8.7.4/8.7.3) with SMTP id DAA05119 for <djb@redhat.com>; Tue, 3 Sep 1996 03:56:19 -0400
+Received: from huahaga.rutgers.edu (huahaga.rutgers.edu [128.6.155.53]) by caipfs.rutgers.edu (8.6.9+bestmx+oldruq+newsunq+grosshack/8.6.9) with ESMTP id DAA23814 for <djb@redhat.com>; Tue, 3 Sep 1996 03:56:19 -0400
+Received: (davem@localhost) by huahaga.rutgers.edu (8.6.9+bestmx+oldruq+newsunq+grosshack/8.6.9) id DAA03010; Tue, 3 Sep 1996 03:56:18 -0400
+Date: Tue, 3 Sep 1996 03:56:18 -0400
+Message-Id: <199609030756.DAA03010@huahaga.rutgers.edu>
+From: "David S. Miller" <davem@caip.rutgers.edu>
+To: djb@redhat.com
+In-reply-to: <199609021829.OAA08401@marvin.redhat.com> (message from Donnie
+	Barnes on Mon, 02 Sep 1996 14:29:39 -0400)
+Subject: Dip patch
+
+   Date: Mon, 02 Sep 1996 14:29:39 -0400
+   From: Donnie Barnes <djb@redhat.com>
+
+   >    I'd like to ship dip on the SPARC.
+   > 
+   > Tell me which SRPM you'd like me to look at, I'll make it work (ftp
+   > location please, thanks).
+
+   ftp.redhat.com:/pub/redhat/devel/srpms/SRPMS/dip-3.3.7o-7.src.rpm
+
+Here ya go, kind sir.
+
+--- command.c.~3~	Tue Sep  3 07:33:28 1996
++++ command.c	Tue Sep  3 07:46:15 1996
+@@ -2350,9 +2350,154 @@
+ }
+ 
+ 
++#elif defined(__sparc__)
+ 
+-#else /* !__alpha__ */
++/* ihl is always 5 or greater, almost always is 5, and iph is not always
++ * word aligned, although that case is seldom.
++ */
++static __inline__ unsigned short ip_fast_csum(__const__ unsigned char *iph,
++					      unsigned int ihl)
++{
++	unsigned long tmp1, tmp2, tmp3, tmp4;
++	unsigned short sum;
++
++	__asm__ __volatile__("
++		andcc	%1, 3, %%g0
++		be,a	7f		! 4 byte aligned
++		 sub	%2, 4, %2
++
++		sll	%2, 2, %5	! number of bytes
++		andcc	%1, 1, %%g0
++		be,a	2f		! 2 byte aligned
++		 mov	%%g0, %0
++
++		ldub	[%1], %0
++		dec	%5
++		inc	%1
++
++	2:
++		andcc	%1, 2, %%g0
++		be	3f		! 4 byte aligned
++		 srl	%5, 1, %6	! number of half words
++
++		lduh	[%1], %3
++		add	%3, %0, %0	! no carry, add two half words
++		add	%1, 2, %1
++		sub	%5, 2, %5
++		dec	%6
++
++	3:
++		srl	%6, 1, %6	! number of words
++		ld	[%1], %4
++
++	4:
++		addcc	%4, %0, %0	! sum up words
++		add	%1, 4, %1
++		addx	%0, %%g0, %0
++		subcc	%6, 1, %6
++		be,a	5f
++		 andcc	%5, 2, %%g0
++
++		b	4b
++		 ld	[%1], %4
++
++	5:
++		be,a	6f		! no half words left
++		 andcc	%5, 1, %%g0
++
++		lduh	[%1], %3
++		addcc	%3, %0, %0
++		add	%1, 2, %1
++		addx	%0, %%g0, %0
++		andcc	%5, 1, %%g0
++
++	6:
++		be,a	9f		! no bytes left
++		 sll	%0, 16, %3
++
++		ldub	[%1], %3	! single byte left
++		sll	%3, 8, %3
++		addcc	%3, %0, %0
++		addx	%0, %%g0, %0
++		sll	%0, 16, %3
++
++		addcc	%0, %3, %3	! merge to half word
++		srl	%3, 16, %0
++		addx	%0, %%g0, %0
++
++		srl	%0, 8, %3	! must have been odd if we get here
++		and	%3, 0xff, %3
++		sll	%0, 8, %0
++		b	10f
++		 add	%3, %0, %0
++
++	7:
++		ld	[%1 + 0x00], %0
++		ld	[%1 + 0x04], %3
++		addcc	%3, %0, %0
++		ld	[%1 + 0x08], %4
++		addxcc	%4, %0, %0
++		ld	[%1 + 0x0c], %3
++		addxcc	%3, %0, %0
++		ld	[%1 + 0x10], %4
++		addx	%0, %%g0, %0
++	8:
++		addcc	%4, %0, %0
++		add	%1, 4, %1
++		addxcc	%0, %%g0, %0
++		subcc	%2, 1, %2
++		be,a	9f
++		 sll	%0, 16, %3
++
++		b	8b
++		 ld	[%1 + 0x10], %4
++	9:
++		addcc	%0, %3, %3
++		srl	%3, 16, %0
++		addx	%0, %%g0, %0
++	10:
++		xnor	%%g0, %0, %0
++	" : "=r" (sum), "=&r" (iph), "=&r" (ihl),
++	    "=r" (tmp1), "=r" (tmp2), "=r" (tmp3), "=r" (tmp4)
++	  : "1" (iph), "2" (ihl));
++
++	return sum;
++}
++
++/*
++ * computes the checksum of the TCP/UDP pseudo-header
++ * returns a 16-bit checksum, already complemented
++ */
++static __inline__ unsigned short csum_tcpudp_magic(unsigned long saddr,
++						   unsigned long daddr,
++						   int len,
++						   unsigned short proto,
++						   unsigned int sum)
++{
++	__asm__ __volatile__("
++		addcc	%1, %0, %0
++		addxcc	%2, %0, %0
++		addxcc	%3, %0, %0
++		addx	%0, %%g0, %0
++		sll	%0, 16, %1
++		addcc	%1, %0, %0
++		srl	%0, 16, %0
++		addx	%0, %%g0, %0
++		xnor	%%g0, %0, %0
++	" : "=r" (sum), "=r" (saddr)
++	  : "r" (daddr), "r" ((proto<<16)+len), "0" (sum), "1" (saddr));
++
++	return sum;
++}
+ 
++static unsigned short
++udp_check(struct udphdr *uh, int len,
++	  unsigned long saddr, unsigned long daddr)
++{
++	return(csum_tcpudp_magic(saddr, daddr, len, IPPROTO_UDP, 0));
++}
++
++#elif defined(__i386__) /* !__alpha__ && !__sparc__ */
+ 
+ /* This is a version of ip_compute_csum() optimized for IP headers, which
+    always checksum on 4 octet boundaries. */
+@@ -2438,7 +2583,11 @@
+   return((~sum) & 0xffff);
+ }
+ 
+-#endif /* !__alpha__ */
++#else
++
++#error You need to write tcp/ip checksum routines for your architecture
++
++#endif /* !__alpha__ && !__sparc__ && !__i386__*/
+ 
+ static void put_bootreq(void)
+ {
+

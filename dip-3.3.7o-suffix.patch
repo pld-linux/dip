@@ -1,0 +1,24 @@
+--- dip-3.3.7o/main.c.orig	Wed Aug 28 16:50:42 1996
++++ dip-3.3.7o/main.c	Wed Aug 28 16:55:13 1996
+@@ -428,7 +428,6 @@
+   strncpy(path, argv[optind], sizeof(path) - sizeof(DIP_SFX) + 1);
+   if ((sp = strrchr(path, '/')) != (char *)NULL) sp++;
+     else sp = path;
+-  if (strchr(sp, '.') == (char *)NULL) strcat(path, DIP_SFX);
+ 
+   /* set euid to ruid */
+   if (setreuid(geteuid(), getuid()) != 0){
+@@ -438,8 +437,11 @@
+   }
+   /* open file with real uid */
+   if ((fp = fopen(path, "r")) == (FILE *)NULL) {
+-	fprintf(stderr, "dip: %s: %s\n", path, strerror(errno));
+-	exit(-1);
++	if (strchr(sp, '.') == (char *)NULL) strcat(path, DIP_SFX);
++	if ((fp = fopen(path, "r")) == (FILE *)NULL) {
++		fprintf(stderr, "dip: %s: %s\n", path, strerror(errno));
++		exit(-1);
++	}
+   }
+   /* set uids back */
+   if (setreuid(geteuid(), getuid()) != 0){

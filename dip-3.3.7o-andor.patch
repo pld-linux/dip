@@ -1,0 +1,24 @@
+--- dip-3.3.7o/command.c.andor	Thu Apr 10 11:53:52 1997
++++ dip-3.3.7o/command.c	Thu Apr 10 11:59:11 1997
+@@ -2714,17 +2714,16 @@
+ #endif
+ 
+ 	if (
+-	    (strcmp(argv[0], "if")    == 0)  && 
+-	    (strcmp(argv[0], "goto")  == 0)  &&
++	    (strcmp(argv[0], "if")    == 0)  || 
++	    (strcmp(argv[0], "goto")  == 0)  ||
+ 	    (strcmp(argv[0], "print") == 0) 
+ 	    ) 
+ 	  {
+ 	    errlevel_flag=0; /* don't modify errlevel value */
++	  } else {
++	    errlevel_flag=1; /* allow to modify errlevel with the new rc */
+ 	    errlevel  = 0; /* allow print of $errlvl after error detected */
+ 	  }
+-	else {
+-	  errlevel_flag=1; /* allow to modify errlevel with the new rc */
+-	}
+ 
+ 	/* Now, check which command it is. */
+ 	if (strcmp(argv[0], "exit") != 0) {

@@ -1,0 +1,448 @@
+--- dip-3.3.7o/skey/md4.c.misc	Wed Jun 22 19:53:50 1994
++++ dip-3.3.7o/skey/md4.c	Thu Jan 21 15:48:47 1999
+@@ -5,6 +5,7 @@
+  *
+  * Portability nits fixed and reformatted - 2/12/91 Phil Karn
+  */
++#include <sys/types.h>
+ 
+ /* 
+  * To use MD4:
+@@ -38,7 +39,7 @@
+ #define FALSE 0
+ 
+ #if (defined(__MSDOS__) || defined(MPU8086) || defined(MPU8080) \
+- || defined(vax) || defined (MIPSEL))
++ || defined(vax) || defined (MIPSEL) || defined(__alpha__))
+ #define LOWBYTEFIRST TRUE	/* Low order bytes are first in memory */
+ #else			/* Almost all other machines are big-endian */
+ #define	LOWBYTEFIRST FALSE
+@@ -87,7 +88,7 @@
+ #define gg(A,B,C,D,i,s)      A = rot((A + g(B,C,D) + X[i] + C2),s)
+ #define hh(A,B,C,D,i,s)      A = rot((A + h(B,C,D) + X[i] + C3),s)
+ 
+-void MDreverse __ARGS((unsigned long *X));
++void MDreverse __ARGS((__u32 *X));
+ 
+ /* MDprint(MDp)
+  * Print message digest buffer MDp as 32 hexadecimal digits.
+@@ -134,9 +135,9 @@
+ 	       *X++ = ((t & 0xFF00FF00) >> 8) | ((t & 0x00FF00FF) << 8); }
+ void
+ MDreverse(X)
+-unsigned long *X;
++__u32 *X;
+ {
+-	register unsigned long t;
++	register __u32 t;
+ 
+ 	revx;
+ 	revx;
+@@ -165,9 +166,9 @@
+ static void
+ MDblock(MDp,X)
+ MDptr MDp;
+-unsigned long *X;
++__u32 *X;
+ { 
+-	register unsigned long tmp, A, B, C, D;
++	register __u32 tmp, A, B, C, D;
+ 
+ #if LOWBYTEFIRST == FALSE
+ 	MDreverse(X);
+@@ -251,7 +252,7 @@
+ unsigned int count;
+ {
+ 	int i,bit,byte,mask;
+-	unsigned long tmp;
++	__u32 tmp;
+ 	unsigned char XX[64];
+ 	unsigned char *p;
+ 
+@@ -276,7 +277,7 @@
+ 	/* Process data */
+ 	if(count == 512){
+ 		/* Full block of data to handle */
+-		MDblock(MDp,(unsigned long *)X);
++		MDblock(MDp,(__u32 *)X);
+ 	} else if(count > 512){
+ 		/* Check for count too large */
+ 		printf("\nError: MDupdate called with illegal count value %ld.",count);
+@@ -299,15 +300,15 @@
+ 		if(byte <= 55){
+ 			for(i=0;i<8;i++)
+ 				XX[56+i] = MDp->count[i];
+-			MDblock(MDp,(unsigned long *)XX);
++			MDblock(MDp,(__u32 *)XX);
+ 		} else {
+ 			/* need to do two blocks to finish up */
+-			MDblock(MDp,(unsigned long *)XX);
++			MDblock(MDp,(__u32 *)XX);
+ 			for(i=0;i<56;i++)
+ 				XX[i] = 0;
+ 			for(i=0;i<8;i++)
+ 				XX[56+i] = MDp->count[i];
+-			MDblock(MDp,(unsigned long *)XX);
++			MDblock(MDp,(__u32 *)XX);
+ 		}
+ 	/* Set flag saying we're done with MD computation */
+ 	MDp->done = 1;
+--- dip-3.3.7o/skey/put.c.misc	Wed Jun 22 19:53:50 1994
++++ dip-3.3.7o/skey/put.c	Thu Jan 21 15:48:47 1999
+@@ -13,9 +13,10 @@
+ #include <string.h>
+ #include <assert.h>
+ #include <ctype.h>
++#include <sys/types.h>
+ #include "skey.h"
+ 
+-static unsigned long extract __ARGS ((char *s, int start, int length));
++static __u32 extract __ARGS ((char *s, int start, int length));
+ static void standard __ARGS ((char *word));
+ static void insert __ARGS ((char *s, int x, int start, int length));
+ static int wsrch __ARGS ((char *w, int low, int high));
+@@ -2244,7 +2245,7 @@
+   unsigned char cl;
+   unsigned char cc;
+   unsigned char cr;
+-  unsigned long y;
++  __u32 y;
+   int shift;
+ 
+   assert (length <= 11);
+@@ -2295,7 +2296,7 @@
+ }
+ 
+ /* Extract 'length' bits from the char array 's' starting with bit 'start' */
+-static unsigned long
++static __u32
+  extract (s, start, length)
+   char *s;
+   int start, length;
+@@ -2303,7 +2304,7 @@
+   unsigned char cl;
+   unsigned char cc;
+   unsigned char cr;
+-  unsigned long x;
++  __u32 x;
+ 
+   assert (length <= 11);
+   assert (start >= 0);
+--- dip-3.3.7o/skey/skeyinit.c.misc	Wed Jun 22 19:53:50 1994
++++ dip-3.3.7o/skey/skeyinit.c	Thu Jan 21 15:48:47 1999
+@@ -13,8 +13,10 @@
+ #include <string.h>
+ #include <pwd.h>
+ #ifdef linux
+-#undef SHADOW
+-#include <shadow.h>
++# ifndef __alpha__
++#  undef SHADOW
++#  include <shadow.h>
++# endif
+ #endif
+ #include <sys/resource.h>
+ #include <time.h>
+@@ -141,7 +143,7 @@
+   switch (rval)
+   {
+   case -1:
+-    perror ("Error opening database: ");
++    perror ("Error opening database");
+     exit (1);
+   case 0:
+     printf ("[Updating %s]\n", pp->pw_name);
+--- dip-3.3.7o/skey/skeylogin.c.misc	Wed Jun 22 19:53:50 1994
++++ dip-3.3.7o/skey/skeylogin.c	Thu Jan 21 15:48:47 1999
+@@ -352,7 +352,7 @@
+   char *username;
+ {
+   int i;
+-  char str [50];
++  static char str [50];
+  
+   struct skey skey;
+  
+--- dip-3.3.7o/skey/skeysubr.c.misc	Wed Jun 22 19:53:51 1994
++++ dip-3.3.7o/skey/skeysubr.c	Thu Jan 21 15:48:47 1999
+@@ -11,6 +11,7 @@
+  * S/KEY misc routines.
+  */
+ 
++#include <malloc.h>
+ #include <stdio.h>
+ 
+ #ifdef HAS_STD_LIB
+@@ -86,7 +87,7 @@
+ 	unsigned int buflen;
+ #ifndef	LITTLE_ENDIAN
+ 	int i;
+-	register long tmp;
++	register __u32 tmp;
+ #endif
+ 	
+ 	buflen = strlen(seed) + strlen(passwd);
+@@ -134,7 +135,7 @@
+ {
+ 	MDstruct md;
+ #ifndef	LITTLE_ENDIAN
+-	register long tmp;
++	__u32 tmp;
+ #endif
+ 
+ 	MDbegin(&md);
+--- dip-3.3.7o/attach.c.misc	Mon Sep 18 17:41:06 1995
++++ dip-3.3.7o/attach.c	Thu Jan 21 15:48:47 1999
+@@ -144,14 +144,14 @@
+ int s;
+ time_t online;
+ 
+-static u_long proxy_arp = 0;
++static __u32 proxy_arp = 0;
+ 
+ /*
+  * Make a string representation of a network IP address.
+  */
+ inline static char *
+ ip_ntoa(ipaddr)
+-u_long ipaddr;
++__u32 ipaddr;
+ {
+     static char b[64];
+ 
+@@ -166,9 +166,9 @@
+ }
+ 
+ static 
+-int get_ether_addr (u_long ipaddr, struct sockaddr *hwaddr)
++int get_ether_addr (__u32 ipaddr, struct sockaddr *hwaddr)
+ {
+-    u_long ina, mask;
++    __u32 ina, mask;
+     struct ifreq *ifr, *ifend;
+ #if 0
+     struct sockaddr_dl *dla;
+@@ -266,8 +266,8 @@
+ 
+ static int sifproxyarp (struct dip *dip)
+ {
+-    u_long his_adr;
+-    u_long my_adr;
++    __u32 his_adr;
++    __u32 my_adr;
+     struct arpreq arpreq;
+ 
+     memset (&arpreq, '\0', sizeof(arpreq));
+@@ -417,7 +417,7 @@
+ typedef struct
+ {
+ 	int acct;
+-	unsigned long sa, da, sm, dm, iface;
++	__u32 sa, da, sm, dm, iface;
+ 	unsigned int nsp, ndp;
+ 	unsigned long npkt, nbyt;
+ 	unsigned int fw_pts[10];
+@@ -448,7 +448,7 @@
+ 	while (fgets(buf, 255, f))
+ 	{  /* read in the data */
+ 	   sscanf(buf,
+-		    "%lX/%lX->%lX/%lX %lX %X %u %u %lu %lu %u %u %u %u %u %u %u %u %u %u",
++		    "%X/%X->%X/%X %X %X %u %u %lu %lu %u %u %u %u %u %u %u %u %u %u",
+ 		    &rec->sa, &rec->sm, &rec->da, &rec->dm, &rec->iface,
+ 		    &rec->fw_flg, &rec->nsp, &rec->ndp, &rec->npkt, &rec->nbyt,
+ 		    &rec->fw_pts[0], &rec->fw_pts[1], &rec->fw_pts[2], &rec->fw_pts[3],
+@@ -478,7 +478,9 @@
+   char buff[1024];
+   static int flag = 0;
+   extern int opt_i;
++#ifdef CONFIG_IP_ACCT
+   u_long b_in=0, b_out=0, p_in=0, p_out=0;
++#endif
+   char  *p;
+   char in_b[10], out_b[10];
+ 
+--- dip-3.3.7o/command.c.misc	Mon Feb 12 21:01:16 1996
++++ dip-3.3.7o/command.c	Thu Jan 21 15:48:47 1999
+@@ -2174,8 +2174,8 @@
+   return(0);
+ }
+  
+-#define int32 unsigned long
+-#define int16 unsigned short
++#define int32 __u32
++#define int16 __u16
+ 
+ struct bootp {
+ 	char	op;			/* packet opcode type */
+@@ -2225,6 +2225,135 @@
+   }
+ }
+ 
++#ifdef __alpha__
++
++/*
++ * The following routines come from linux/arch/alpha/lib/checksum.c and
++ * linux/net/ipv4/udp.c.  See, I'm in a hurry to get this working... :)
++ */
++
++static inline unsigned short
++from64to16(unsigned long x)
++{
++	/* add up 32-bit words for 33 bits */
++	x = (x & 0xffffffff) + (x >> 32);
++	/* add up 16-bit and 17-bit words for 17+c bits */
++	x = (x & 0xffff) + (x >> 16);
++	/* add up 16-bit and 2-bit for 16+c bit */
++	x = (x & 0xffff) + (x >> 16);
++	/* add up carry.. */
++	x = (x & 0xffff) + (x >> 16);
++	return x;
++}
++
++/*
++ * Do a 64-bit checksum on an arbitrary memory area..
++ *
++ * This isn't a great routine, but it's not _horrible_ either. The
++ * inner loop could be unrolled a bit further, and there are better
++ * ways to do the carry, but this is reasonable.
++ */
++static inline unsigned long
++do_csum(unsigned char * buff, int len)
++{
++	int odd, count;
++	unsigned long result = 0;
++
++	if (len <= 0)
++		goto out;
++	odd = 1 & (unsigned long) buff;
++	if (odd) {
++		result = *buff << 8;
++		len--;
++		buff++;
++	}
++	count = len >> 1;		/* nr of 16-bit words.. */
++	if (count) {
++		if (2 & (unsigned long) buff) {
++			result += *(unsigned short *) buff;
++			count--;
++			len -= 2;
++			buff += 2;
++		}
++		count >>= 1;		/* nr of 32-bit words.. */
++		if (count) {
++			if (4 & (unsigned long) buff) {
++				result += *(unsigned int *) buff;
++				count--;
++				len -= 4;
++				buff += 4;
++			}
++			count >>= 1;	/* nr of 64-bit words.. */
++			if (count) {
++				unsigned long carry = 0;
++				do {
++					unsigned long w = *(unsigned long *) buff;
++					count--;
++					buff += 8;
++					result += carry;
++					result += w;
++					carry = (w > result);
++				} while (count);
++				result += carry;
++				result = (result & 0xffffffff) + (result >> 32);
++			}
++			if (len & 4) {
++				result += *(unsigned int *) buff;
++				buff += 4;
++			}
++		}
++		if (len & 2) {
++			result += *(unsigned short *) buff;
++			buff += 2;
++		}
++	}
++	if (len & 1)
++		result += *buff;
++	result = from64to16(result);
++	if (odd)
++		result = ((result >> 8) & 0xff) | ((result & 0xff) << 8);
++out:
++	return result;
++}
++
++
++/*
++ *	This is a version of ip_compute_csum() optimized for IP headers,
++ *	which always checksum on 4 octet boundaries.
++ */
++unsigned short ip_fast_csum(unsigned char * iph, unsigned int ihl)
++{
++	return ~do_csum(iph,ihl*4);
++}
++
++/*
++ * computes the checksum of the TCP/UDP pseudo-header
++ * returns a 16-bit checksum, already complemented.
++ */
++unsigned short int csum_tcpudp_magic(unsigned long saddr,
++				   unsigned long daddr,
++				   unsigned short len,
++				   unsigned short proto,
++				   unsigned int sum)
++{
++	return ~from64to16(saddr + daddr + sum +
++		((unsigned long) ntohs(len) << 16) +
++		((unsigned long) proto << 8));
++}
++
++
++static unsigned short
++udp_check(struct udphdr *uh, int len,
++	  unsigned long saddr, unsigned long daddr)
++{
++	return(csum_tcpudp_magic(saddr, daddr, len, IPPROTO_UDP, 0));
++}
++
++
++
++#else /* !__alpha__ */
++
++
+ /* This is a version of ip_compute_csum() optimized for IP headers, which
+    always checksum on 4 octet boundaries. */
+ static inline unsigned short
+@@ -2308,6 +2437,8 @@
+   /* We only want the bottom 16 bits, but we never cleared the top 16. */
+   return((~sum) & 0xffff);
+ }
++
++#endif /* !__alpha__ */
+ 
+ static void put_bootreq(void)
+ {
+--- dip-3.3.7o/dip.h.misc	Wed Sep  6 10:42:50 1995
++++ dip-3.3.7o/dip.h	Thu Jan 21 15:51:51 1999
+@@ -43,11 +43,10 @@
+ #include <arpa/inet.h>
+ #include <arpa/nameser.h>
+ #include <netinet/in.h>
++#include <net/if_arp.h>
+ #include <netdb.h>
+ #include <resolv.h>
+ #include <net/if_arp.h>
+-
+-#include <linux/autoconf.h>
+ 
+ #include "pathnames.h"
+ 
+--- dip-3.3.7o/Makefile.misc	Thu Feb  8 15:06:16 1996
++++ dip-3.3.7o/Makefile	Thu Jan 21 15:48:47 1999
+@@ -45,8 +45,7 @@
+ #SNKLIB=
+ 
+ SKEYDEF	= -DSKEY
+-#SKEYLIB	= -L. -L./skey -L/usr/local/lib -lskey
+-SKEYLIB	= -lskey
++SKEYLIB	= -L. -L./skey -lskey
+ 
+ CC	= gcc
+ 

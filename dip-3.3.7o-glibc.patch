@@ -1,0 +1,135 @@
+--- dip-3.3.7o/skey/skeysubr.c.glibc	Thu Jul 17 16:00:39 1997
++++ dip-3.3.7o/skey/skeysubr.c	Thu Jul 17 16:00:39 1997
+@@ -42,6 +42,7 @@
+ # define gtty(fd,buf) ioctl((fd),TIOCGETP,(buf))
+ #else
+ # include <termio.h>
++# include <sys/ioctl.h>
+ # define TTYSTRUCT termio
+ # define stty(fd,buf) ioctl((fd),TCSETA,(buf))
+ # define gtty(fd,buf) ioctl((fd),TCGETA,(buf))
+--- dip-3.3.7o/skey/Makefile.glibc	Mon Jul 24 20:22:49 1995
++++ dip-3.3.7o/skey/Makefile	Thu Jul 17 16:03:17 1997
+@@ -12,7 +12,7 @@
+ CC      = gcc
+ CFLAGS	= -pipe -O2 #-DUSE_ECHO
+ #SYSLIBS = -lshadow -ldbm
+-SYSLIBS = -ldbm # For ELF - no shadow needed (included in libc).
++SYSLIBS = -ldb -lcrypt # For ELF - no shadow needed (included in libc).
+ 
+ LIB     =  libskey.a
+ PROGS   =  key keyinit keysh
+--- dip-3.3.7o/skey/skeyinit.c.glibc	Thu Jul 17 16:00:39 1997
++++ dip-3.3.7o/skey/skeyinit.c	Thu Jul 17 16:00:39 1997
+@@ -13,10 +13,7 @@
+ #include <string.h>
+ #include <pwd.h>
+ #ifdef linux
+-# ifndef __alpha__
+-#  undef SHADOW
+ #  include <shadow.h>
+-# endif
+ #endif
+ #include <sys/resource.h>
+ #include <time.h>
+--- dip-3.3.7o/skey/md4.c.glibc	Thu Jul 17 16:02:37 1997
++++ dip-3.3.7o/skey/md4.c	Thu Jul 17 16:02:47 1997
+@@ -7,6 +7,8 @@
+  */
+ #include <sys/types.h>
+ 
++typedef unsigned int __u32;
++
+ /* 
+  * To use MD4:
+  *   -- Include md4.h in your program
+--- dip-3.3.7o/skey/put.c.glibc	Thu Jul 17 16:02:58 1997
++++ dip-3.3.7o/skey/put.c	Thu Jul 17 16:03:05 1997
+@@ -16,6 +16,8 @@
+ #include <sys/types.h>
+ #include "skey.h"
+ 
++typedef unsigned int __u32;
++
+ static __u32 extract __ARGS ((char *s, int start, int length));
+ static void standard __ARGS ((char *word));
+ static void insert __ARGS ((char *s, int x, int start, int length));
+--- dip-3.3.7o/dip.h.glibc	Thu Jul 17 16:00:39 1997
++++ dip-3.3.7o/dip.h	Thu Jul 17 16:00:39 1997
+@@ -40,9 +40,10 @@
+ #include <sys/socket.h>
+ #include <sys/ioctl.h>
+ #include <sys/time.h>
++#include <netinet/in.h>
++#include <netinet/ip.h>
+ #include <arpa/inet.h>
+ #include <arpa/nameser.h>
+-#include <netinet/in.h>
+ #include <net/if_arp.h>
+ #include <netdb.h>
+ #include <resolv.h>
+--- dip-3.3.7o/command.c.glibc	Thu Jul 17 16:00:39 1997
++++ dip-3.3.7o/command.c	Thu Jul 17 16:06:32 1997
+@@ -29,11 +29,13 @@
+  *		your option) any later version.
+  */
+ #include "dip.h"
+-#include <linux/types.h>
+-#include <linux/ip.h>
+-#include <linux/udp.h>
++#include <netinet/ip.h>
++#include <netinet/udp.h>
+ #include <sys/wait.h>
+ 
++typedef unsigned int __u32;
++typedef unsigned short __u16;
++
+ #define HASHSIZE 128
+ 
+ struct variable {
+@@ -680,7 +682,7 @@
+   nargv = malloc (argc*sizeof(char*));   /* allocate the array of pointers */
+   if (nargv == NULL)                     /* Ooops? */
+   {
+-    fprintf (stderr, "error: Couldn't allocate %d bytes for"    /* Ooops! */
++    fprintf (stderr, "error: Couldn't allocate %ld bytes for"    /* Ooops! */
+                            " onexit commands array: `%s'\n",
+              argc*sizeof(char*), strerror (errno) );
+     return -1;
+@@ -694,7 +696,7 @@
+     nargv[cnt] = malloc (strlen(argv[cnt]) + 1);   /* allocate */
+     if (nargv[cnt] == NULL)                        /* Oops? */
+     {
+-      fprintf (stderr, "error: Couldn't allocate %d bytes for argument %d"
++      fprintf (stderr, "error: Couldn't allocate %ld bytes for argument %d"
+                              " of the onexit command: `%s'\n",
+                strlen (argv[cnt]), cnt, strerror (errno) );
+       arg_clean (argc, nargv);       /* clean */
+--- dip-3.3.7o/tty.c.glibc	Thu Jul 17 16:03:48 1997
++++ dip-3.3.7o/tty.c	Thu Jul 17 16:03:56 1997
+@@ -29,8 +29,6 @@
+ #include "dip.h"
+ #include <sys/stat.h>
+ #ifdef LINUX
+-#   include <linux/fs.h>
+-#   include <linux/tty.h>
+ #ifndef NO_SERIAL
+ #   include <linux/serial.h> /* for Linux-1.1.13 */
+ #endif /* ~NO_SERIAL */
+--- dip-3.3.7o/attach.c.glibc	Thu Jul 17 16:04:32 1997
++++ dip-3.3.7o/attach.c	Thu Jul 17 16:05:12 1997
+@@ -130,10 +130,12 @@
+ 
+ #include <sys/socket.h>
+ #include <net/if.h>
+-#include <linux/route.h>
+-#include <linux/if_ether.h>
++#include <net/route.h>
++#include <netinet/if_ether.h>
+ #include <netinet/in.h>
+ #include <time.h>
++
++typedef unsigned int __u32;
+ 
+ #define MAX_IFS  512
+ 

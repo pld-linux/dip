@@ -1,0 +1,11 @@
+--- dip-3.3.7o/Makefile.nfsstnd	Wed Aug 28 16:57:56 1996
++++ dip-3.3.7o/Makefile	Wed Aug 28 16:58:15 1996
+@@ -50,7 +50,7 @@
+ CC	= gcc
+ 
+ # If you wish, add -g flag to the next line
+-CFLAGS	= -DLINUX $(SKEYDEF) $(SECUREID) -pipe -O6 -Wall -m486
++CFLAGS	= -DLINUX $(SKEYDEF) $(SECUREID) -DFSSTND -pipe -Wall $(RPM_OPT_FLAGS)
+ 
+ #LD	= ld
+ LD	= $(CC)
