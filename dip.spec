@@ -6,6 +6,7 @@ Release:	16
 License:	GPL
 Group:		Applications/Communications
 Source0:	ftp://sunsite.unc.edu/pub/Linux/system/network/serial/%{name}337o-uri.tgz
+# Source0-md5:	45fc2a9abbcb3892648933cadf7ba090
 Patch0:		%{name}-3.3.7o-misc.patch
 Patch1:		%{name}-3.3.7o-suffix.patch
 Patch2:		%{name}-3.3.7o-fsstnd.patch
