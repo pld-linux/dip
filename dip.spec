@@ -1,5 +1,5 @@
 Summary:	Handles the connections needed for dialup IP links
-Summary(pl):	Obs³uga po³±czeñ wdzwanianych 
+Summary(pl):	Obs³uga po³±czeñ wdzwanianych
 Name:		dip
 Version:	3.3.7o
 Release:	14
