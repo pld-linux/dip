@@ -1,0 +1,11 @@
+--- dip-3.3.7o/skey/Makefile	Tue May 30 15:46:17 2000
++++ dip-3.3.7o/skey/Makefile	Tue Dec 19 15:00:03 2000
+@@ -12,7 +12,7 @@
+ CC      = gcc
+ CFLAGS	= -pipe -O2 #-DUSE_ECHO
+ #SYSLIBS = -lshadow -ldbm
+-SYSLIBS = -ldb -lcrypt # For ELF - no shadow needed (included in libc).
++SYSLIBS = -lcrypt # For ELF - no shadow needed (included in libc).
+ 
+ LIB     =  libskey.a
+ PROGS   =  key keyinit keysh

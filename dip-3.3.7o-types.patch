@@ -1,0 +1,10 @@
+--- dip-3.3.7o/tty.c	Tue May 30 15:56:06 2000
++++ dip-3.3.7o/tty.c	Tue May 30 15:55:49 2000
+@@ -30,6 +30,7 @@
+ #include <sys/stat.h>
+ #ifdef LINUX
+ #ifndef NO_SERIAL
++#   include <linux/types.h>
+ #   include <linux/serial.h> /* for Linux-1.1.13 */
+ #endif /* ~NO_SERIAL */
+ #endif

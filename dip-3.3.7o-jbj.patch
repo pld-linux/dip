@@ -1,0 +1,20 @@
+--- dip-3.3.7o/skey/skeysubr.c.jbj	Wed Jun  2 16:57:00 1999
++++ dip-3.3.7o/skey/skeysubr.c	Wed Jun  2 16:57:44 1999
+@@ -94,7 +94,7 @@
+ 	unsigned int buflen;
+ #ifndef	Little_Endian
+ 	int i;
+-	register __u32 tmp;
++	register u_int32_t tmp;
+ #endif
+ 	
+ 	buflen = strlen(seed) + strlen(passwd);
+@@ -142,7 +142,7 @@
+ {
+ 	MDstruct md;
+ #ifndef	Little_Endian
+-	__u32 tmp;
++	u_int32_t tmp;
+ #endif
+ 
+ 	MDbegin(&md);

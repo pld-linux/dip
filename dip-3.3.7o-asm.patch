@@ -1,0 +1,143 @@
+diff -uNr dip-3.3.7o/command.c dip-3.3.7o-64/command.c
+--- dip-3.3.7o/command.c	Tue May 30 15:42:24 2000
++++ dip-3.3.7o-64/command.c	Tue May 30 15:44:06 2000
+@@ -84,6 +84,10 @@
+ static char	var_securidfixed[9] = "";     /* fixed part of secureID */
+ #endif /* SECUREID */
+ 
++#ifndef HAS_STPCPY
++char *stpcpy(char *dest, const char *src);
++#endif
++
+ static void
+ sig_exit(void)
+ {
+@@ -682,7 +686,7 @@
+   nargv = malloc (argc*sizeof(char*));   /* allocate the array of pointers */
+   if (nargv == NULL)                     /* Ooops? */
+   {
+-    fprintf (stderr, "error: Couldn't allocate %ld bytes for"    /* Ooops! */
++    fprintf (stderr, "error: Couldn't allocate %d bytes for"    /* Ooops! */
+                            " onexit commands array: `%s'\n",
+              argc*sizeof(char*), strerror (errno) );
+     return -1;
+@@ -696,7 +700,7 @@
+     nargv[cnt] = malloc (strlen(argv[cnt]) + 1);   /* allocate */
+     if (nargv[cnt] == NULL)                        /* Oops? */
+     {
+-      fprintf (stderr, "error: Couldn't allocate %ld bytes for argument %d"
++      fprintf (stderr, "error: Couldn't allocate %d bytes for argument %d"
+                              " of the onexit command: `%s'\n",
+                strlen (argv[cnt]), cnt, strerror (errno) );
+       arg_clean (argc, nargv);       /* clean */
+@@ -2227,7 +2231,10 @@
+   }
+ }
+ 
+-#ifdef __alpha__
++/* This used to be Alpha-specific code, but the assembler code is not very
++ * portable to new binutils versions. */
++
++#ifdef unix
+ 
+ /*
+  * The following routines come from linux/arch/alpha/lib/checksum.c and
+@@ -2235,7 +2242,7 @@
+  */
+ 
+ static inline unsigned short
+-from64to16(unsigned long x)
++from64to16(u_int64_t x)
+ {
+ 	/* add up 32-bit words for 33 bits */
+ 	x = (x & 0xffffffff) + (x >> 32);
+@@ -2255,15 +2262,15 @@
+  * inner loop could be unrolled a bit further, and there are better
+  * ways to do the carry, but this is reasonable.
+  */
+-static inline unsigned long
++static inline u_int64_t
+ do_csum(unsigned char * buff, int len)
+ {
+ 	int odd, count;
+-	unsigned long result = 0;
++	u_int64_t result = 0;
+ 
+ 	if (len <= 0)
+ 		goto out;
+-	odd = 1 & (unsigned long) buff;
++	odd = 1 & (int) buff;
+ 	if (odd) {
+ 		result = *buff << 8;
+ 		len--;
+@@ -2271,7 +2278,7 @@
+ 	}
+ 	count = len >> 1;		/* nr of 16-bit words.. */
+ 	if (count) {
+-		if (2 & (unsigned long) buff) {
++		if (2 & (int) buff) {
+ 			result += *(unsigned short *) buff;
+ 			count--;
+ 			len -= 2;
+@@ -2279,7 +2286,7 @@
+ 		}
+ 		count >>= 1;		/* nr of 32-bit words.. */
+ 		if (count) {
+-			if (4 & (unsigned long) buff) {
++			if (4 & (int) buff) {
+ 				result += *(unsigned int *) buff;
+ 				count--;
+ 				len -= 4;
+@@ -2287,9 +2294,9 @@
+ 			}
+ 			count >>= 1;	/* nr of 64-bit words.. */
+ 			if (count) {
+-				unsigned long carry = 0;
++				u_int64_t carry = 0;
+ 				do {
+-					unsigned long w = *(unsigned long *) buff;
++					u_int64_t w = *(u_int64_t*) buff;
+ 					count--;
+ 					buff += 8;
+ 					result += carry;
+@@ -2332,21 +2339,21 @@
+  * computes the checksum of the TCP/UDP pseudo-header
+  * returns a 16-bit checksum, already complemented.
+  */
+-unsigned short int csum_tcpudp_magic(unsigned long saddr,
+-				   unsigned long daddr,
++unsigned short int csum_tcpudp_magic(u_int64_t saddr,
++				   u_int64_t daddr,
+ 				   unsigned short len,
+ 				   unsigned short proto,
+ 				   unsigned int sum)
+ {
+ 	return ~from64to16(saddr + daddr + sum +
+-		((unsigned long) ntohs(len) << 16) +
+-		((unsigned long) proto << 8));
++		((u_int64_t) ntohs(len) << 16) +
++		((u_int64_t) proto << 8));
+ }
+ 
+ 
+ static unsigned short
+ udp_check(struct udphdr *uh, int len,
+-	  unsigned long saddr, unsigned long daddr)
++	  u_int64_t saddr, u_int64_t daddr)
+ {
+ 	return(csum_tcpudp_magic(saddr, daddr, len, IPPROTO_UDP, 0));
+ }
+diff -uNr dip-3.3.7o/login.c dip-3.3.7o-64/login.c
+--- dip-3.3.7o/login.c	Tue Jun 13 14:46:31 1995
++++ dip-3.3.7o-64/login.c	Tue May 30 15:34:14 2000
+@@ -18,6 +18,10 @@
+  */
+ #include "dip.h"
+ 
++#ifdef MIN
++#undef MIN
++#endif
++
+ #define MIN(a, b) ((a < b)? a : b)
+ 
+ static int verify_inet_addr(char *p);

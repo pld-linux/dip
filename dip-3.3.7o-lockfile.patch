@@ -1,0 +1,11 @@
+--- dip-3.3.7o/tty.c.lockfile	Mon Nov 22 13:25:27 1999
++++ dip-3.3.7o/tty.c	Mon Nov 22 13:25:27 1999
+@@ -883,7 +883,7 @@
+ 
+ int tty_getmode(void)
+ {
+-#if 0
++#if 1
+   return(tty_mode);
+ #else
+   return 1;

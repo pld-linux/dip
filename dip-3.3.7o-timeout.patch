@@ -1,0 +1,10 @@
+--- dip-3.3.7o/main.c.timeout	Mon Nov 22 13:16:38 1999
++++ dip-3.3.7o/main.c	Mon Nov 22 13:16:38 1999
+@@ -396,6 +396,7 @@
+   (void) signal(SIGTERM, catch);
+   (void) signal(SIGHUP,  log_catch);
+   (void) signal(SIGQUIT, catch);  
++  (void) siginterrupt(SIGALRM, 1);
+ 
+   /* Verbose mode? -> print mydip values */
+   if (opt_v == 1) {
