@@ -12,7 +12,7 @@ Patch3: dip-3.3.7o-glibc.patch
 Patch4: dip-3.3.7o-sparc.patch
 Patch5: dip-3.3.7o-andor.patch
 Patch6: dip-arm.patch
-BuildRoot: /var/tmp/dip-root
+BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
 Dip is a modem dialer.  Dip handles the connections needed for dialup
