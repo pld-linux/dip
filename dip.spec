@@ -45,9 +45,9 @@ potzrbuje siê narzêdzia do obs³ugi modemowych po³±czeñ IP.
 %patch6 -p1 -b .arm
 
 %build
-make depend
+%{__make} depend
 (cd skey; make clean; make linux)
-make RPM_OPT_FLAGS="$RPM_OPT_FLAGS"
+%{__make} RPM_OPT_FLAGS="$RPM_OPT_FLAGS"
 
 %install
 rm -rf $RPM_BUILD_ROOT
