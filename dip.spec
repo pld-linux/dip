@@ -1,4 +1,5 @@
 Summary:	Handles the connections needed for dialup IP links
+Summary(pl):	Obs³uga po³±czeñ wdzwanianych 
 Name:		dip
 Version:	3.3.7o
 Release:	14
@@ -41,9 +42,9 @@ potzrbuje siê narzêdzia do obs³ugi modemowych po³±czeñ IP.
 %patch1 -p1
 %patch2 -p1
 %patch4 -p0
-%patch5 -p1 -b .andor
-%patch3 -p1 -b .glibc
-%patch6 -p1 -b .arm
+%patch5 -p1
+%patch3 -p1
+%patch6 -p1
 
 %build
 %{__make} depend
