@@ -42,7 +42,7 @@ przychodz±ce jak i wychodz±ce, przy czym bezpieczeñstwo po³±czeñ
 przychodz±cych opiera siê na has³ach. Mo¿na wykorzystaæ dip do
 ustawienia po³±czeñ PPP i SLIP, ale nie jest do tego niezbêdny. Netcfg
 u¿ywa dip do ustawienia po³±czeñ SLIP. Nale¿y zainstalowaæ dip je¶li
-potzrbuje siê narzêdzia do obs³ugi modemowych po³±czeñ IP.
+potrzebuje siê narzêdzia do obs³ugi modemowych po³±czeñ IP.
 
 %prep
 %setup -q
