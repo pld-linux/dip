@@ -2,7 +2,7 @@ Summary:	Handles the connections needed for dialup IP links
 Summary(pl):	Obs³uga po³±czeñ wdzwanianych
 Name:		dip
 Version:	3.3.7o
-Release:	15
+Release:	16
 License:	GPL
 Group:		Applications/Communications
 Source0:	ftp://sunsite.unc.edu/pub/Linux/system/network/serial/%{name}337o-uri.tgz
@@ -65,7 +65,7 @@ potzrbuje siê narzêdzia do obs³ugi modemowych po³±czeñ IP.
 
 %install
 rm -rf $RPM_BUILD_ROOT
-install -d $RPM_BUILD_ROOT{%{_prefix}/sbin,%{_mandir}/man8}
+install -d $RPM_BUILD_ROOT{%{_sbindir},%{_mandir}/man8}
 
 install -c dip $RPM_BUILD_ROOT%{_sbindir}
 ln -sf dip $RPM_BUILD_ROOT%{_sbindir}/diplogin
@@ -75,6 +75,23 @@ echo ".so dip.8" > $RPM_BUILD_ROOT%{_mandir}/man8/diplogin.8
 
 %clean
 rm -rf $RPM_BUILD_ROOT
+
+
+%post
+if [ ! -f /etc/shells ]; then
+	echo "/usr/sbin/diplogin" > /etc/shells
+else
+	if ! grep -q '^/usr/sbin/diplogin$' /etc/shells; then
+		echo "/usr/sbin/diplogin" >> /etc/shells
+	fi
+fi
+
+%preun
+if [ "$1" = "0" ]; then
+	grep -v /usr/sbin/diplogin /etc/shells > /etc/shells.new
+	mv -f /etc/shells.new /etc/shells
+fi
+
 
 %files
 %defattr(644,root,root,755)
