@@ -20,6 +20,8 @@ Patch10:	%{name}-3.3.7o-lockfile.patch
 Patch11:	%{name}-3.3.7o-asm.patch
 Patch12:	%{name}-3.3.7o-db.patch
 Patch13:	%{name}-3.3.7o-types.patch
+Requires(post,preun):	grep
+Requires(preun):	fileutils
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -47,20 +49,23 @@ potzrbuje siê narzêdzia do obs³ugi modemowych po³±czeñ IP.
 %patch1 -p1
 %patch2 -p1
 %patch4 -p0
-%patch5 -p1 -b .andor
-%patch3 -p1 -b .glibc
-%patch6 -p1 -b .arm
-%patch7 -p0 -b .skey
-%patch8 -p1 -b .jbj
-%patch9 -p1 -b .timeout
-%patch10 -p1 -b .lockfile
-%patch11 -p1 -b .asm
-%patch12 -p1 -b .db
-%patch13 -p1 -b .types
+%patch5 -p1
+%patch3 -p1
+%patch6 -p1
+%patch7 -p0
+%patch8 -p1
+%patch9 -p1
+%patch10 -p1
+%patch11 -p1
+%patch12 -p1
+%patch13 -p1
 
 %build
 %{__make} depend
-(cd skey; make clean; make linux)
+cd skey
+%{__make} clean
+%{__make} linux
+cd ..
 %{__make} RPM_OPT_FLAGS="%{rpmcflags}"
 
 %install
@@ -76,8 +81,8 @@ echo ".so dip.8" > $RPM_BUILD_ROOT%{_mandir}/man8/diplogin.8
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-
 %post
+umask 022
 if [ ! -f /etc/shells ]; then
 	echo "/usr/sbin/diplogin" > /etc/shells
 else
@@ -88,13 +93,13 @@ fi
 
 %preun
 if [ "$1" = "0" ]; then
+	umask 022
 	grep -v /usr/sbin/diplogin /etc/shells > /etc/shells.new
 	mv -f /etc/shells.new /etc/shells
 fi
 
-
 %files
 %defattr(644,root,root,755)
-%attr(0755,root,uucp) %{_sbindir}/dip
+%attr(755,root,uucp) %{_sbindir}/dip
 %attr(755,root,root) %{_sbindir}/diplogin
 %{_mandir}/man8/*
