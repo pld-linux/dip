@@ -5,8 +5,6 @@ Version:	3.3.7o
 Release:	14
 License:	GPL
 Group:		Applications/Communications
-Group(de):	Applikationen/Kommunikation
-Group(pl):	Aplikacje/Komunikacja
 Source0:	ftp://sunsite.unc.edu/pub/Linux/system/network/serial/%{name}337o-uri.tgz
 Patch0:		%{name}-3.3.7o-misc.patch
 Patch1:		%{name}-3.3.7o-suffix.patch
