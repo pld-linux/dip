@@ -4,15 +4,16 @@ Version:	3.3.7o
 Release:	14
 License:	GPL
 Group:		Applications/Communications
+Group(de):	Applikationen/Kommunikation
 Group(pl):	Aplikacje/Komunikacja
 Source0:	ftp://sunsite.unc.edu/pub/Linux/system/network/serial/%{name}337o-uri.tgz
-Patch0:		dip-3.3.7o-misc.patch
-Patch1:		dip-3.3.7o-suffix.patch
-Patch2:		dip-3.3.7o-fsstnd.patch
-Patch3:		dip-3.3.7o-glibc.patch
-Patch4:		dip-3.3.7o-sparc.patch
-Patch5:		dip-3.3.7o-andor.patch
-Patch6:		dip-arm.patch
+Patch0:		%{name}-3.3.7o-misc.patch
+Patch1:		%{name}-3.3.7o-suffix.patch
+Patch2:		%{name}-3.3.7o-fsstnd.patch
+Patch3:		%{name}-3.3.7o-glibc.patch
+Patch4:		%{name}-3.3.7o-sparc.patch
+Patch5:		%{name}-3.3.7o-andor.patch
+Patch6:		%{name}-arm.patch
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -47,19 +48,17 @@ potzrbuje siê narzêdzia do obs³ugi modemowych po³±czeñ IP.
 %build
 %{__make} depend
 (cd skey; make clean; make linux)
-%{__make} RPM_OPT_FLAGS="$RPM_OPT_FLAGS"
+%{__make} RPM_OPT_FLAGS="%{rpmcflags}"
 
 %install
 rm -rf $RPM_BUILD_ROOT
 install -d $RPM_BUILD_ROOT%{_prefix}/{sbin,man/man8}
 
-install -c -s dip $RPM_BUILD_ROOT%{_sbindir}
+install -c dip $RPM_BUILD_ROOT%{_sbindir}
 ln -sf dip $RPM_BUILD_ROOT%{_sbindir}/diplogin
 
 install dip.8 $RPM_BUILD_ROOT%{_mandir}/man8
 echo ".so dip.8" > $RPM_BUILD_ROOT%{_mandir}/man8/diplogin.8
-
-gzip -9nf $RPM_BUILD_ROOT%{_mandir}/man8/*
 
 %clean
 rm -rf $RPM_BUILD_ROOT
