@@ -2,7 +2,7 @@ Summary:	Handles the connections needed for dialup IP links
 Summary(pl):	Obs³uga po³±czeñ wdzwanianych
 Name:		dip
 Version:	3.3.7o
-Release:	14
+Release:	15
 License:	GPL
 Group:		Applications/Communications
 Source0:	ftp://sunsite.unc.edu/pub/Linux/system/network/serial/%{name}337o-uri.tgz
@@ -13,6 +13,13 @@ Patch3:		%{name}-3.3.7o-glibc.patch
 Patch4:		%{name}-3.3.7o-sparc.patch
 Patch5:		%{name}-3.3.7o-andor.patch
 Patch6:		%{name}-arm.patch
+Patch7:		%{name}-3.3.7o-skey.patch
+Patch8:		%{name}-3.3.7o-jbj.patch
+Patch9:		%{name}-3.3.7o-timeout.patch
+Patch10:	%{name}-3.3.7o-lockfile.patch
+Patch11:	%{name}-3.3.7o-asm.patch
+Patch12:	%{name}-3.3.7o-db.patch
+Patch13:	%{name}-3.3.7o-types.patch
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -36,13 +43,20 @@ potzrbuje siê narzêdzia do obs³ugi modemowych po³±czeñ IP.
 
 %prep
 %setup -q
-%patch -p1
+%patch0 -p1
 %patch1 -p1
 %patch2 -p1
 %patch4 -p0
-%patch5 -p1
-%patch3 -p1
-%patch6 -p1
+%patch5 -p1 -b .andor
+%patch3 -p1 -b .glibc
+%patch6 -p1 -b .arm
+%patch7 -p0 -b .skey
+%patch8 -p1 -b .jbj
+%patch9 -p1 -b .timeout
+%patch10 -p1 -b .lockfile
+%patch11 -p1 -b .asm
+%patch12 -p1 -b .db
+%patch13 -p1 -b .types
 
 %build
 %{__make} depend
@@ -51,7 +65,7 @@ potzrbuje siê narzêdzia do obs³ugi modemowych po³±czeñ IP.
 
 %install
 rm -rf $RPM_BUILD_ROOT
-install -d $RPM_BUILD_ROOT%{_prefix}/{sbin,man/man8}
+install -d $RPM_BUILD_ROOT{%{_prefix}/sbin,%{_mandir}/man8}
 
 install -c dip $RPM_BUILD_ROOT%{_sbindir}
 ln -sf dip $RPM_BUILD_ROOT%{_sbindir}/diplogin
