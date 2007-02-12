@@ -1,5 +1,5 @@
 Summary:	Handles the connections needed for dialup IP links
-Summary(pl):	Obs³uga po³±czeñ wdzwanianych
+Summary(pl.UTF-8):   ObsÅ‚uga poÅ‚Ä…czeÅ„ wdzwanianych
 Name:		dip
 Version:	3.3.7o
 Release:	16
@@ -35,14 +35,14 @@ either. Netcfg uses dip for setting up SLIP connections.
 Install dip if you need a utility which will handle dialup IP
 connections.
 
-%description -l pl
-Dip jest narzêdziem do dzwonienia za pomoc± modemu. Obs³uguje
-po³±czenia IP takie jak SLIP czy PPP. Dip obs³uguje zarówno po³±czenia
-przychodz±ce jak i wychodz±ce, przy czym bezpieczeñstwo po³±czeñ
-przychodz±cych opiera siê na has³ach. Mo¿na wykorzystaæ dip do
-ustawienia po³±czeñ PPP i SLIP, ale nie jest do tego niezbêdny. Netcfg
-u¿ywa dip do ustawienia po³±czeñ SLIP. Nale¿y zainstalowaæ dip je¶li
-potrzebuje siê narzêdzia do obs³ugi modemowych po³±czeñ IP.
+%description -l pl.UTF-8
+Dip jest narzÄ™dziem do dzwonienia za pomocÄ… modemu. ObsÅ‚uguje
+poÅ‚Ä…czenia IP takie jak SLIP czy PPP. Dip obsÅ‚uguje zarÃ³wno poÅ‚Ä…czenia
+przychodzÄ…ce jak i wychodzÄ…ce, przy czym bezpieczeÅ„stwo poÅ‚Ä…czeÅ„
+przychodzÄ…cych opiera siÄ™ na hasÅ‚ach. MoÅ¼na wykorzystaÄ‡ dip do
+ustawienia poÅ‚Ä…czeÅ„ PPP i SLIP, ale nie jest do tego niezbÄ™dny. Netcfg
+uÅ¼ywa dip do ustawienia poÅ‚Ä…czeÅ„ SLIP. NaleÅ¼y zainstalowaÄ‡ dip jeÅ›li
+potrzebuje siÄ™ narzÄ™dzia do obsÅ‚ugi modemowych poÅ‚Ä…czeÅ„ IP.
 
 %prep
 %setup -q
